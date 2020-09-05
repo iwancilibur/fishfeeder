@@ -1,0 +1,68 @@
+#define BLYNK_PRINT Serial
+
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <Wire.h>
+#include <PCA9685.h>
+
+PCA9685 pwmController(Wire, PCA9685_PhaseBalancer_Weaved); // Library using Wire1 and weaved phase balancing scheme
+PCA9685_ServoEvaluator pwmServo;
+
+int channel0=0;
+
+// You should get Auth Token in the Blynk App.
+// Go to the Project Settings (nut icon).
+char auth[] = "a166b58981d1479ab6bccf13c1ca8f8f";
+
+// Your WiFi credentials.
+// Set password to "" for open networks.
+char ssid[] = "BMC Makerspace";
+char pass[] = "123qweasd";
+
+BLYNK_WRITE(V3)
+{
+  pwmController.setChannelPWM(channel0, pwmServo.pwmForAngle(param.asInt()));
+  
+}
+
+
+
+BLYNK_WRITE(V0)
+{
+  int getdata=param.asInt();
+  int data=BLYNK_READ(V1);
+  if(getdata==1){
+    for (int i=0; i<waktunya; i++){
+      pwmController.setChannelPWM(channel0, pwmServo.pwmForAngle(0));
+      delay(1000);
+      pwmController.setChannelPWM(channel0, pwmServo.pwmForAngle(180));
+      delay(1000);
+    }
+  }
+  
+  
+}
+
+
+void setup()
+{
+  // Debug console
+  Serial.begin(115200);
+  //Blynk.begin(auth, ssid, pass);
+  // You can also specify server:
+  Blynk.begin(auth, ssid, pass, "iwancilibur.my.id", 8080);
+  //Blynk.begin(auth, ssid, pass, IPAddress(192,168,1,200), 8080);
+  Serial.println("My Arduino project is tweeting using my app and it’s awesome!\n #arduino #IoT #Feeder Automatic");
+  Blynk.tweet("My Arduino project is tweeting using my app and it’s awesome!\n #arduino #IoT #AutomaticFeeder #InteractiveRobotics");
+  Wire.begin();                      // Wire must be started first
+  Wire.setClock(4000);             // Supported baud rates are 100kHz, 400kHz, and 1000kHz
+  pwmController.resetDevices();       // Software resets all PCA9685 devices on Wire line
+  pwmController.init(B000000);        // Address pins A5-A0 set to B000000
+  pwmController.setPWMFrequency(50);  // 50Hz provides 20ms standard servo phase length
+}
+
+void loop()
+{
+  Blynk.run();
+}
